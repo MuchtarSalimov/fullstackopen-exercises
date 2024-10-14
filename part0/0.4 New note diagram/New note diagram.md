@@ -8,7 +8,7 @@
       server-->>browser: redirect instruction to query /exampleapp/notes
       deactivate server
 
-      Note right of browser: As the client sends a new entry to be created on the server, the server asks the client to reload the page in order to reflect the new data (via a redirect).
+      Note right of browser: Server creates new data entry, prompting client to redirect to reload the page.
 
       browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/notes
       activate server
@@ -32,7 +32,7 @@
       server-->>browser: [{"content":"Zz","date":"2024-10-14T15:29:18.250Z"}, ... ]
       deactivate server
 
-          Note right of browser: The browser executes the callback function that renders the notes
+          Note right of browser: The browser executes the callback function that renders the notes, now including new note
 
       browser->>server: GET https://studies.cs.helsinki.fi/favicon.ico
       activate server
