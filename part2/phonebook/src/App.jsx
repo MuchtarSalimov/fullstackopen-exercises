@@ -19,13 +19,31 @@ const App = () => {
 
   const addNewPerson = (event) => {
     event.preventDefault()
-    if (persons.map((person) => person.name).indexOf(newName) >= 0 ){
-      alert(`${newName} is already added to the phonebook`)
+
+    // index will be -1 if name not already in persons array
+    const existingIndex = persons.map((person) => person.name).indexOf(newName)
+    if ( existingIndex >= 0 ) {
+    
+      const confirmationMessage = `${newName} is already added to the phonebook, replace the old number with a new one?`
+
+      if(window.confirm(confirmationMessage)) {
+        const oldPerson = persons[existingIndex]
+        const newPerson = { ...oldPerson, number: newNumber}
+
+        // update person in database, then update person in local state
+        personService
+          .updatePerson(oldPerson, newPerson)
+          .then(updatedPerson => setPersons(persons.map((person) => person.id === updatedPerson.id ? { ...person, number: updatedPerson.number}: person)))
+        }
+
     } else {
       const newPerson = { name: newName, number: newNumber }
+
+      // create new person on database, then create new person in local state
       personService
         .createPerson(newPerson)
         .then((createdPerson) => setPersons(persons.concat(createdPerson)))
+
       setNewName('')
       setNewNumber('')
     }

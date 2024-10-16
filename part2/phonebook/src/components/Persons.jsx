@@ -11,7 +11,6 @@ function Persons({ persons, nameFilter, handleDelete }) {
           <p>{ person.name } { person.number } &nbsp; 
             <button onClick={ () => handleDelete(person) }>delete</button>
           </p>
-          
         </div>)
       }
     </div>
