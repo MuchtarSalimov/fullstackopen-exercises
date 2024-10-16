@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
-import axios from 'axios'
+import personService from './personService'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -10,11 +10,11 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [nameFilter, setNameFilter] = useState('')
 
-  // initialize persons from db in json-server
+  // initialize persons from json-server database
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons')
-      .then((response) => setPersons(response.data))
+    personService
+      .getAllPersons()
+      .then((data) => setPersons(data))
   }, [])
 
   const addNewPerson = (event) => {
@@ -22,7 +22,10 @@ const App = () => {
     if (persons.map((person) => person.name).indexOf(newName) >= 0 ){
       alert(`${newName} is already added to the phonebook`)
     } else {
-      setPersons(persons.concat({ name: newName, number: newNumber }))
+      const newPerson = { name: newName, number: newNumber }
+      personService
+        .createPerson(newPerson)
+        .then((createdPerson) => setPersons(persons.concat(createdPerson)))
       setNewName('')
       setNewNumber('')
     }
@@ -38,6 +41,15 @@ const App = () => {
 
   const handleNameFilterChange = (event) => {
     setNameFilter(event.target.value)
+  }
+
+  const handleDelete = (person) => {
+    if (window.confirm(`delete ${person.name}?`)) {
+      // delete person from json server, then locally
+      personService
+        .deletePerson(person.id)
+        .then(deletedPerson => setPersons(persons.filter((person) => person.id !== deletedPerson.id)))
+    }
   }
 
   return (
@@ -58,7 +70,10 @@ const App = () => {
 
       <h3>Numbers</h3>
 
-      <Persons persons={ persons } nameFilter={ nameFilter }/>
+      <Persons
+        persons={ persons }
+        nameFilter={ nameFilter }
+        handleDelete={ handleDelete }/>
     </div>
   )
 }
