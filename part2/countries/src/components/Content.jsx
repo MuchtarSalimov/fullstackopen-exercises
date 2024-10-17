@@ -1,35 +1,22 @@
 import countriesService from "../services/countriesService"
 import { useState, useEffect } from "react"
+import emptyObject from "../misc/emptyObject"
+import weatherService from "../services/weatherService"
+
+const emptyCountryData = emptyObject.emptyCountryData
+const emptyWeatherData = emptyObject.emptyWeatherData
 
 const countryList = await countriesService.getCountryList()
 
 function Content({ query, handleCountryClick }) {
-  const emptyCountryData = {
-    isEmpty: true,
-    name: '',
-    capital: '',
-    area: 0,
-    languages: [],
-    flagUrl: '',
-  }
 
   const [matchedCountries, setMatchedCountries] = useState([])
   const [specifiedCountryData, setSpecifiedCountryData] = useState({ ...emptyCountryData})
-
-/*  Shape of specifiedCountryData if set:
-  {
-    name: string
-    capital: string
-    area: number,
-    languages: array of string,
-    flagUrl: string
-  }
-*/
+  const [weatherData, setWeatherData] = useState({ ...emptyWeatherData })
 
 useEffect(()=>{
     setMatchedCountries([ ...countryList])
   }, [])
-
 
   // when input query changed, updates match list and if only one, fetches data specific to that country
   useEffect(()=>{
@@ -37,6 +24,7 @@ useEffect(()=>{
     setMatchedCountries(countryList.filter((country)=>country.toLowerCase().includes(query.toLowerCase())))
   }, [ query ])
 
+  // watches to see if only one country remains a match, then updates specified country if necessary
   useEffect(()=>{
     if ( matchedCountries.length === 1 ) {
       // and specified country data is not set or for wrong country
@@ -48,10 +36,63 @@ useEffect(()=>{
           setSpecifiedCountryData({ ...data, isEmpty:false })
         })
     } else {
-      setSpecifiedCountryData({ ...emptyCountryData }
-      )
+      setSpecifiedCountryData({ ...emptyCountryData })
     }
   }, [matchedCountries])
+
+
+  // weather data updates when specified country changes
+  useEffect(()=>{
+    switch(true) {
+      case specifiedCountryData.isEmpty && weatherData.isEmpty:
+        // both empty states match, do nothing
+        break
+      case specifiedCountryData.isEmpty && !weatherData.isEmpty:
+        // clear weather data since no country
+        setWeatherData(emptyWeatherData)
+        break
+      case !specifiedCountryData.isEmpty && weatherData.isEmpty:
+        // fill weather data with country data
+        //TODO
+        weatherService
+          .getWeather(
+            specifiedCountryData.capital,
+            specifiedCountryData.capitalLatitude,
+            specifiedCountryData.capitalLongitude)
+          .then((data)=>{
+            setWeatherData({
+              isEmpty: false,
+              capital: data.capital,
+              temp: data.temp,
+              icon: data.icon,
+              windSpeed: data.windSpeed
+            })
+          })
+        break
+      case !specifiedCountryData.isEmpty && !weatherData.isEmpty:
+        // 2 cases here. weather matches or doesnt
+        if (specifiedCountryData.capital === weatherData.capital) {
+          // capitals match so do nothing
+        } else {
+          // update weather data to match weather in capital of current specified country
+          weatherService.getWeather(
+            specifiedCountryData.capital,
+            specifiedCountryData.capitalLatitude,
+            specifiedCountryData.capitalLongitude)
+          .then((data)=>{
+            setWeatherData({
+              isEmpty: false,
+              capital: data.capital,
+              temp: data.temp,
+              icon: data.icon,
+              windSpeed: data.windSpeed
+            })
+          })
+        }
+        break
+      default: console.log('error, this should never happen. gap in conditionals')
+    }
+  }, [specifiedCountryData])
 
   switch(true) {
     case !specifiedCountryData.isEmpty:
@@ -64,13 +105,17 @@ useEffect(()=>{
           { specifiedCountryData.languages.map((language)=> <li key={ language }>{ language }</li> ) }
         </ul>
         <img src={ specifiedCountryData.flagUrl } />
+        <h2>Weather in { weatherData.capital }</h2>
+        <p>temperature { weatherData.temp } Celsius</p>
+        <img src={ `https://openweathermap.org/img/wn/${ weatherData.icon }@2x.png` }></img>
+        <p>wind { weatherData.windSpeed } m/s</p>
       </div>)
       break
     case matchedCountries.length < 20:
       return (
         <>
           {
-            matchedCountries.map(country=> <><div key={ country }>{ country }{' '}<button value={ country } onClick={ handleCountryClick }>show</button></div></> )
+            matchedCountries.map(country=> <div key={ country }><div>{ country }{' '}<button value={ country } onClick={ handleCountryClick }>show</button></div></div> )
           }
         </>
       )
@@ -80,5 +125,5 @@ useEffect(()=>{
       break
   }
 }
-//                   <button value={ country } onClick={ handleCountryClick }>show</button>
+
 export default Content

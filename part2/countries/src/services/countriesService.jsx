@@ -1,4 +1,5 @@
 import axios from "axios"
+import weatherSrvice from "./weatherService"
 
 const baseUrl = 'https://studies.cs.helsinki.fi/restcountries/api'
 
@@ -17,6 +18,8 @@ const getCountryInfo = countryName => {
       area: data.area,
       languages: Object.values(data.languages),
       flagUrl: data.flags.png,
+      capitalLatitude: data.capitalInfo.latlng[0],
+      capitalLongitude: data.capitalInfo.latlng[1],
     }
   })
 }
