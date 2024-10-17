@@ -61,7 +61,7 @@ useEffect(()=>{
         <div>area { specifiedCountryData.area }</div>
         <h3>languages</h3>
         <ul>
-          { specifiedCountryData.languages.map(language=> { <li key={ language }>{ language }</li> }) }
+          { specifiedCountryData.languages.map((language)=> <li key={ language }>{ language }</li> ) }
         </ul>
         <img src={ specifiedCountryData.flagUrl } />
       </div>)
@@ -70,7 +70,7 @@ useEffect(()=>{
       return (
         <>
           {
-            matchedCountries.map(country=> <div key={ country }>{ country }</div> )
+            matchedCountries.map(country=> <><div key={ country }>{ country }{' '}<button value={ country } onClick={ handleCountryClick }>show</button></div></> )
           }
         </>
       )
